@@ -18,6 +18,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('ARCHITECTURE', help = 'Please specify the architeture of convolutional neural network (1/2/3)')
     parser.add_argument('TREATMENT', help = 'Please specify whether perform data preprocessing or not? (yes/no)')
+    parser.add_argument('--TREATMENT_json', help = 'Please specify the json needed for preprocess (optional)', required=False)
     args = parser.parse_args()
 
     ### Mapping user input ###
@@ -49,7 +50,9 @@ def main():
 
     ### Build Dataloader ###
     if args.TREATMENT == 'yes':
-        loader = preprocess.data_loader(args.TREATMENT, batch_size, [300,300], [224,224], [[0.485, 0.456, 0.406], [0.229, 0.224, 0.225]])
+        f = open(args.TREATMENT_json)
+        preprocess_para = json.load(f)
+        loader = preprocess.data_loader(args.TREATMENT, batch_size, preprocess_para)
     else:
         loader = preprocess.data_loader(args.TREATMENT, batch_size)
 
