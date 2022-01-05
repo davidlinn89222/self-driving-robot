@@ -77,6 +77,8 @@ def main():
     elif args.ARCHITECTURE == '3':
         model = architecture.CNN_Model3(img_size, MODEL_SPEC)
 
+    print(model)
+
     model = model.to(device)
 
     logging.info('Built model')
