@@ -1,0 +1,5 @@
+{
+    "dncrop": {"top":160, "left":0, "height":320, "width":640},
+    "totensor" : 1,
+    "num_of_worker" : 0
+}

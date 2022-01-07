@@ -22,6 +22,8 @@ class data_loader:
                     trans_lst.append(transforms.ColorJitter(brightness = self.preprocess_para['brightness'], contrast=0, hue=0))
                 elif key == 'totensor':
                     trans_lst.append(transforms.ToTensor())
+                elif key == 'dncrop':
+                    trans_lst.append(transforms.Lambda(lambda x: transforms.functional.crop(x, self.preprocess_para['dncrop']["top"], self.preprocess_para['dncrop']["left"], self.preprocess_para['dncrop']["height"], self.preprocess_para['dncrop']["width"])))
             self.data_transform = transforms.Compose(trans_lst)
         elif self.preproc_treatment == 'no':
             self.data_transform = transforms.Compose([
@@ -41,10 +43,16 @@ class data_loader:
         train_set_size = int(len(train_data) * 0.8)
         valid_set_size = len(train_data) - train_set_size
 
-        train_data, valid_data = torch.utils.data.random_split(train_data, [train_set_size, valid_set_size])
+        train_data, valid_data = torch.utils.data.random_split(train_data, [train_set_size, valid_set_size], generator=torch.Generator().manual_seed(123))
 
-        train_loader = torch.utils.data.DataLoader(train_data, batch_size=self.batch_size, shuffle=True, num_workers=8)
-        valid_loader = torch.utils.data.DataLoader(valid_data, batch_size=self.batch_size, shuffle=True, num_workers=8)
+        if self.preproc_treatment == 'yes':
+            if 'num_of_worker' in self.preprocess_para.keys():
+                train_loader = torch.utils.data.DataLoader(train_data, batch_size=self.batch_size, shuffle=True, num_workers=self.preprocess_para['num_of_worker'])
+                valid_loader = torch.utils.data.DataLoader(valid_data, batch_size=self.batch_size, shuffle=True, num_workers=self.preprocess_para['num_of_worker'])
+        else
+            train_loader = torch.utils.data.DataLoader(train_data, batch_size=self.batch_size, shuffle=True, num_workers=16)
+            valid_loader = torch.utils.data.DataLoader(valid_data, batch_size=self.batch_size, shuffle=True, num_workers=16)
+
         test_loader = torch.utils.data.DataLoader(test_data, batch_size=1, shuffle=True)
 
         return train_loader, valid_loader, test_loader
