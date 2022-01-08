@@ -1,0 +1,5 @@
+{
+    "dncrop": {"top":160, "left":0, "height":320, "width":640},
+    "totensor" : 1,
+    "normalize_param" : [[0.485, 0.456, 0.406], [0.229, 0.224, 0.225]]
+}

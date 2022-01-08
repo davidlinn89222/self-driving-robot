@@ -17,19 +17,26 @@ def main():
     ### Arguements Parsing ###
     parser = argparse.ArgumentParser()
     parser.add_argument('ARCHITECTURE', help = 'Please specify the architeture of convolutional neural network (1/2/3)')
-    parser.add_argument('TREATMENT', help = 'Please specify whether perform data preprocessing or not? (yes/no)')
-    parser.add_argument('--TREATMENT_json', help = 'Please specify the json needed for preprocess (optional)', required=False)
+    parser.add_argument('TREATMENT', help = 'Please specify what perform data preprocessing ? (1: dncrop 2: normalization, 3: mixed)')
     args = parser.parse_args()
 
     ### Mapping user input ###
-    PREPROC_SPEC = 'Preproc' if args.TREATMENT == 'yes' else 'noPreproc'
-
     if args.ARCHITECTURE == '1':
-        MODEL_SPEC = 'Model1'
+        MODEL_SPEC = 'Model_1_layer'
     elif args.ARCHITECTURE == '2':
-        MODEL_SPEC = 'Model2'
+        MODEL_SPEC = 'Model_3_layer_32_64_128'
     elif args.ARCHITECTURE == '3':
-        MODEL_SPEC = 'Model3'
+        MODEL_SPEC = 'Model_3_layer_64_128_256'
+
+    if args.TREATMENT == '1':
+        PREPROC_SPEC = 'dncrop'
+        json_file = open('dncrop.json')
+    elif args.TREATMENT == '2':
+        PREPROC_SPEC = 'norm'
+        json_file = open('normalization.json')
+    elif args.TREATMENT == '3':
+        PREPROC_SPEC = 'mixed'
+        json_file = open('mixed.json')
 
     ### Create RUN folder with the combination of model and preprocess specifications ###
     RUN_DIR_PATH = './RUN'
@@ -49,12 +56,8 @@ def main():
     batch_size = 64 # ...
 
     ### Build Dataloader ###
-    if args.TREATMENT == 'yes':
-        f = open(args.TREATMENT_json)
-        preprocess_para = json.load(f)
-        loader = preprocess.data_loader(args.TREATMENT, batch_size, preprocess_para)
-    else:
-        loader = preprocess.data_loader(args.TREATMENT, batch_size)
+    preprocess_para = json.load(json_file)
+    loader = preprocess.data_loader(args.TREATMENT, batch_size, preprocess_para)
 
     loader.define_preprocess()
     train_loader, valid_loader, test_loader = loader.build_loader()
@@ -95,7 +98,7 @@ def main():
 
     logging.info('Began to train the model')
 
-    utils.train_model(model, data_loaders, criterion, optimizer, scheduler, device, RUN_SUBDIR_PATH, num_epochs=20)
+    utils.train_model(model, data_loaders, criterion, optimizer, scheduler, device, RUN_SUBDIR_PATH, num_epochs=2)
 
     logging.info('Training ended')
 

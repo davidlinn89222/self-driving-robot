@@ -7,27 +7,20 @@ class data_loader:
         self.preproc_treatment = preproc_treatment
         self.batch_size = batch_size
         self.preprocess_para = preprocess_para
+    
+    def dncrop_fcn(self, x):
+        return transforms.functional.crop(x, self.preprocess_para['dncrop']["top"], self.preprocess_para['dncrop']["left"], self.preprocess_para['dncrop']["height"], self.preprocess_para['dncrop']["width"])
 
     def define_preprocess(self):
-        if self.preproc_treatment == 'yes':
-            trans_lst = []
-            for key in self.preprocess_para.keys():
-                if key == 'rd_crop_size':
-                    trans_lst.append(transforms.RandomCrop(self.preprocess_para["rd_crop_size"]))
-                elif key == 'resize_size':
-                    trans_lst.append(transforms.Resize(self.preprocess_para['resize_size']))
-                elif key == 'normalize_param':
-                    trans_lst.append(transforms.Normalize(self.preprocess_para['normalize_param'][0], self.preprocess_para['normalize_param'][1]))
-                elif key == 'brightness':
-                    trans_lst.append(transforms.ColorJitter(brightness = self.preprocess_para['brightness'], contrast=0, hue=0))
-                elif key == 'totensor':
-                    trans_lst.append(transforms.ToTensor())
-                elif key == 'dncrop':
-                    trans_lst.append(transforms.Lambda(lambda x: transforms.functional.crop(x, self.preprocess_para['dncrop']["top"], self.preprocess_para['dncrop']["left"], self.preprocess_para['dncrop']["height"], self.preprocess_para['dncrop']["width"])))
-            self.data_transform = transforms.Compose(trans_lst)
-        elif self.preproc_treatment == 'no':
-            self.data_transform = transforms.Compose([
-                transforms.ToTensor()])
+        trans_lst = []
+        for key in self.preprocess_para.keys():
+            if key == 'normalize_param':
+                trans_lst.append(transforms.Normalize(self.preprocess_para['normalize_param'][0], self.preprocess_para['normalize_param'][1]))
+            elif key == 'totensor':
+                trans_lst.append(transforms.ToTensor())
+            elif key == 'dncrop':
+                trans_lst.append(transforms.Lambda(self.dncrop_fcn))
+        self.data_transform = transforms.Compose(trans_lst)
 
         print(self.data_transform)
 
@@ -44,14 +37,8 @@ class data_loader:
         valid_set_size = len(train_data) - train_set_size
 
         train_data, valid_data = torch.utils.data.random_split(train_data, [train_set_size, valid_set_size], generator=torch.Generator().manual_seed(123))
-
-        if self.preproc_treatment == 'yes':
-            if 'num_of_worker' in self.preprocess_para.keys():
-                train_loader = torch.utils.data.DataLoader(train_data, batch_size=self.batch_size, shuffle=True, num_workers=self.preprocess_para['num_of_worker'])
-                valid_loader = torch.utils.data.DataLoader(valid_data, batch_size=self.batch_size, shuffle=True, num_workers=self.preprocess_para['num_of_worker'])
-        else
-            train_loader = torch.utils.data.DataLoader(train_data, batch_size=self.batch_size, shuffle=True, num_workers=16)
-            valid_loader = torch.utils.data.DataLoader(valid_data, batch_size=self.batch_size, shuffle=True, num_workers=16)
+        train_loader = torch.utils.data.DataLoader(train_data, batch_size=self.batch_size, shuffle=True, num_workers=32)
+        valid_loader = torch.utils.data.DataLoader(valid_data, batch_size=self.batch_size, shuffle=True, num_workers=32)
 
         test_loader = torch.utils.data.DataLoader(test_data, batch_size=1, shuffle=True)
 
